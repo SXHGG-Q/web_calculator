@@ -22,11 +22,32 @@
             margin: 5px;
             padding: 8px 12px;
             cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
         #result {
             margin: 20px 0;
             font-size: 20px;
             color: #007bff;
+            min-height: 24px;
+        }
+        #history {
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .formula-input {
+            margin: 10px 0;
+            padding: 8px;
+            width: 200px;
         }
     </style>
 </head>
@@ -61,7 +82,7 @@
     <hr>
     <!-- 自定义公式区 -->
     <h3>自定义公式</h3>
-    <input type="text" id="formulaName" placeholder="输入公式名称">
+    <input type="text" id="formulaName" class="formula-input" placeholder="输入公式名称">
     <button onclick="calcFormula()">计算公式</button>
     <button onclick="listFormulas()">查看公式库</button>
     <button onclick="window.open('/formula.html')">创建公式</button>
@@ -80,6 +101,8 @@
 <script>
     // 核心变量：当前最大未知数编号
     let maxVar = 2;
+    // 存储当前计算的原始表达式（用于历史记录）
+    let currentExpression = '';
 
     // ===================== 1. 动态输入框控制 =====================
     // 添加未知数（最多9个）
@@ -106,68 +129,172 @@
         maxVar--;
     }
 
-    // 获取x1值（兼容原有运算）
-    function getX1() {
-        return document.getElementById("x1-input").value || 0;
-    }
-
-    // 获取x2值（兼容原有运算）
-    function getX2() {
-        return document.getElementById("x2-input").value || 0;
+    // 获取指定编号的x值（转Number类型，默认0）
+    function getX(n) {
+        const val = document.getElementById(`x${n}-input`)?.value;
+        return val ? Number(val) : 0;
     }
 
     // ===================== 2. 基础运算 =====================
     async function calc(type) {
-        const x1 = getX1();
-        const x2 = getX2();
-        const res = await fetch(`/${type}?x1=${x1}&x2=${x2}`);
-        const result = await res.text();
-        document.getElementById("result").innerText = "结果：" + result;
+        try {
+            // 获取运算参数（统一转Number）
+            const x1 = getX(1);
+            const x2 = getX(2);
+            let url = '';
+            let exp = '';
+
+            // 根据运算类型拼接接口URL和表达式（适配后端参数名 angle1/angle2）
+            switch (type) {
+                case 'add':
+                    url = `/add?angle1=${x1}&angle2=${x2}`;
+                    exp = `${x1} + ${x2}`;
+                    break;
+                case 'sub':
+                    url = `/sub?angle1=${x1}&angle2=${x2}`;
+                    exp = `${x1} - ${x2}`;
+                    break;
+                case 'mul':
+                    url = `/mul?angle1=${x1}&angle2=${x2}`;
+                    exp = `${x1} × ${x2}`;
+                    break;
+                case 'div':
+                    if (x2 === 0) {
+                        alert('除数不能为0！');
+                        return;
+                    }
+                    url = `/div?angle1=${x1}&angle2=${x2}`;
+                    exp = `${x1} ÷ ${x2}`;
+                    break;
+                case 'pow':
+                    url = `/pow?angle1=${x1}&angle2=${x2}`;
+                    exp = `${x1} ^ ${x2}`;
+                    break;
+                case 'sqrt':
+                    url = `/sqrt?angle1=${x1}&angle2=${x2}`;
+                    exp = `${x1} 的 ${x2} 次方根`;
+                    break;
+                case 'log':
+                    url = `/log?angle1=${x1}&angle2=${x2}`;
+                    exp = `以 ${x2} 为底 ${x1} 的对数`;
+                    break;
+                case 'sin':
+                    url = `/sin?angle1=${x1}`;
+                    exp = `sin(${x1})`;
+                    break;
+                case 'cos':
+                    url = `/cos?angle1=${x1}`;
+                    exp = `cos(${x1})`;
+                    break;
+                case 'tan':
+                    url = `/tan?angle1=${x1}`;
+                    exp = `tan(${x1})`;
+                    break;
+                default:
+                    alert('不支持的运算类型！');
+                    return;
+            }
+
+            // 保存当前表达式（用于后续保存历史）
+            currentExpression = exp;
+
+            // 调用后端接口
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('接口请求失败');
+
+            const result = await res.text();
+            document.getElementById("result").innerText = `结果：${result}`;
+        } catch (e) {
+            console.error('计算失败：', e);
+            document.getElementById("result").innerText = `结果：计算失败（${e.message}）`;
+        }
     }
 
     // ===================== 3. 自定义公式运算 =====================
     async function calcFormula() {
-        const formulaName = document.getElementById("formulaName").value;
+        const formulaName = document.getElementById("formulaName").value.trim();
         if (!formulaName) {
             alert("请输入公式名称！");
             return;
         }
 
         // 收集所有x1~x9参数
-        let url = `/calcFormula?name=${formulaName}`;
+        let url = `/calcFormula?name=${encodeURIComponent(formulaName)}`;
+        let expParams = [];
         for (let i = 1; i <= maxVar; i++) {
-            const val = document.getElementById(`x${i}-input`).value || 0;
+            const val = getX(i);
             url += `&x${i}=${val}`;
+            expParams.push(`x${i}=${val}`);
         }
+
+        // 保存当前公式表达式
+        currentExpression = `公式[${formulaName}](${expParams.join(', ')})`;
 
         try {
             const res = await fetch(url);
+            if (!res.ok) throw new Error('公式计算接口请求失败');
+
             const result = await res.text();
-            document.getElementById("result").innerText = "结果：" + result;
+            document.getElementById("result").innerText = `结果：${result}`;
         } catch (e) {
-            document.getElementById("result").innerText = "计算失败";
+            console.error('公式计算失败：', e);
+            document.getElementById("result").innerText = `结果：计算失败（${e.message}）`;
         }
     }
 
     // 查看公式列表
     async function listFormulas() {
-        const res = await fetch("/listFormulas");
-        const text = await res.text();
-        document.getElementById("history").innerText = text;
+        try {
+            const res = await fetch("/listFormulas");
+            if (!res.ok) throw new Error('获取公式列表失败');
+
+            const text = await res.text();
+            document.getElementById("history").innerText = text;
+        } catch (e) {
+            document.getElementById("history").innerText = `获取公式失败：${e.message}`;
+        }
     }
 
     // ===================== 4. 历史记录 =====================
     async function saveRecord() {
-        const x1 = getX1();
-        const x2 = getX2();
-        await fetch(`/save?exp=x1=${x1},x2=${x2}&res=${document.getElementById("result").innerText}`);
-        alert("保存成功！");
+        // 校验是否有可保存的结果
+        const resultText = document.getElementById("result").innerText;
+        if (!resultText || resultText === '结果：' || resultText.includes('计算失败')) {
+            alert('暂无有效结果可保存！');
+            return;
+        }
+
+        // 提取结果数值（去掉"结果："前缀）
+        const result = resultText.replace('结果：', '').trim();
+        // 校验结果是否为有效数值（公式计算可能返回非数值）
+        if (isNaN(Number(result)) && !/^公式/.test(currentExpression)) {
+            alert('结果不是有效数值，无法保存！');
+            return;
+        }
+
+        try {
+            // 适配后端save接口参数名：expression / result
+            const url = `/save?expression=${encodeURIComponent(currentExpression)}&result=${result}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('保存失败');
+
+            alert("保存成功！");
+        } catch (e) {
+            console.error('保存记录失败：', e);
+            alert(`保存失败：${e.message}`);
+        }
     }
 
     async function queryRecords() {
-        const res = await fetch("/query");
-        const text = await res.text();
-        document.getElementById("history").innerText = text;
+        try {
+            const res = await fetch("/query");
+            if (!res.ok) throw new Error('获取历史记录失败');
+
+            const text = await res.text();
+            document.getElementById("history").innerText = text;
+        } catch (e) {
+            document.getElementById("history").innerText = `获取历史记录失败：${e.message}`;
+        }
     }
 </script>
 </body>
