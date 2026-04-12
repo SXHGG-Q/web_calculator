@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>科学计算器</title>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #inputContainer {
+            margin: 15px 0;
+        }
+        #inputContainer input {
+            margin: 5px;
+            padding: 8px;
+            width: 200px;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        #result {
+            margin: 20px 0;
+            font-size: 20px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>科学计算器</h1>
+
+    <!-- 动态未知数输入框区域 -->
+    <div id="inputContainer">
+        <div><input type="number" id="x1-input" placeholder="请输入 x1 的值" step="any"></div>
+        <div><input type="number" id="x2-input" placeholder="请输入 x2 的值" step="any"></div>
+    </div>
+
+    <!-- 控制按钮 -->
+    <button onclick="addInput()">添加未知数(x)</button>
+    <button onclick="removeInput()">删除最后一个</button>
+
+    <hr>
+    <!-- 基础运算区 -->
+    <h3>基础/科学运算</h3>
+    <button onclick="calc('add')">加法</button>
+    <button onclick="calc('sub')">减法</button>
+    <button onclick="calc('mul')">乘法</button>
+    <button onclick="calc('div')">除法</button>
+    <button onclick="calc('pow')">次方</button>
+    <button onclick="calc('sqrt')">开方</button>
+    <button onclick="calc('log')">对数</button>
+    <button onclick="calc('sin')">正弦</button>
+    <button onclick="calc('cos')">余弦</button>
+    <button onclick="calc('tan')">正切</button>
+
+    <hr>
+    <!-- 自定义公式区 -->
+    <h3>自定义公式</h3>
+    <input type="text" id="formulaName" placeholder="输入公式名称">
+    <button onclick="calcFormula()">计算公式</button>
+    <button onclick="listFormulas()">查看公式库</button>
+    <button onclick="window.open('/formula.html')">创建公式</button>
+
+    <hr>
+    <!-- 历史记录区 -->
+    <h3>历史记录</h3>
+    <button onclick="saveRecord()">保存当前记录</button>
+    <button onclick="queryRecords()">查看历史</button>
+
+    <!-- 结果展示 -->
+    <div id="result">结果：</div>
+    <pre id="history"></pre>
+</div>
+
+<script>
+    // 核心变量：当前最大未知数编号
+    let maxVar = 2;
+
+    // ===================== 1. 动态输入框控制 =====================
+    // 添加未知数（最多9个）
+    function addInput() {
+        if (maxVar >= 9) {
+            alert("最多支持 9 个未知数！");
+            return;
+        }
+        maxVar++;
+        const container = document.getElementById("inputContainer");
+        const div = document.createElement("div");
+        div.innerHTML = `<input type="number" id="x${maxVar}-input" placeholder="请输入 x${maxVar} 的值" step="any">`;
+        container.appendChild(div);
+    }
+
+    // 删除未知数（最少1个）
+    function removeInput() {
+        if (maxVar <= 1) {
+            alert("至少保留 1 个未知数！");
+            return;
+        }
+        const container = document.getElementById("inputContainer");
+        container.removeChild(container.lastChild);
+        maxVar--;
+    }
+
+    // 获取x1值（兼容原有运算）
+    function getX1() {
+        return document.getElementById("x1-input").value || 0;
+    }
+
+    // 获取x2值（兼容原有运算）
+    function getX2() {
+        return document.getElementById("x2-input").value || 0;
+    }
+
+    // ===================== 2. 基础运算 =====================
+    async function calc(type) {
+        const x1 = getX1();
+        const x2 = getX2();
+        const res = await fetch(`/${type}?x1=${x1}&x2=${x2}`);
+        const result = await res.text();
+        document.getElementById("result").innerText = "结果：" + result;
+    }
+
+    // ===================== 3. 自定义公式运算 =====================
+    async function calcFormula() {
+        const formulaName = document.getElementById("formulaName").value;
+        if (!formulaName) {
+            alert("请输入公式名称！");
+            return;
+        }
+
+        // 收集所有x1~x9参数
+        let url = `/calcFormula?name=${formulaName}`;
+        for (let i = 1; i <= maxVar; i++) {
+            const val = document.getElementById(`x${i}-input`).value || 0;
+            url += `&x${i}=${val}`;
+        }
+
+        try {
+            const res = await fetch(url);
+            const result = await res.text();
+            document.getElementById("result").innerText = "结果：" + result;
+        } catch (e) {
+            document.getElementById("result").innerText = "计算失败";
+        }
+    }
+
+    // 查看公式列表
+    async function listFormulas() {
+        const res = await fetch("/listFormulas");
+        const text = await res.text();
+        document.getElementById("history").innerText = text;
+    }
+
+    // ===================== 4. 历史记录 =====================
+    async function saveRecord() {
+        const x1 = getX1();
+        const x2 = getX2();
+        await fetch(`/save?exp=x1=${x1},x2=${x2}&res=${document.getElementById("result").innerText}`);
+        alert("保存成功！");
+    }
+
+    async function queryRecords() {
+        const res = await fetch("/query");
+        const text = await res.text();
+        document.getElementById("history").innerText = text;
+    }
+</script>
+</body>
+</html>

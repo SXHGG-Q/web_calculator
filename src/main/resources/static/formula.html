@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>自定义公式编辑器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            font-size: 18px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        .panel {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .panel button {
+            padding: 14px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .action {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .action button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        .save { background: #28a745; }
+        .back { background: #6c757d; }
+        .unknown { background: #6610f2; }
+        .backspace { background: #dc3545; }
+    </style>
+</head>
+<body>
+<h2>科学公式编辑器</h2>
+<input id="formulaName" placeholder="输入公式名称（如：勾股定理、梯形面积）">
+<input id="formulaInput" readonly placeholder="点击按钮拼接公式（x1-x9为未知数）">
+
+<div class="panel">
+    <button class="unknown" onclick="append('x1')">x1</button>
+    <button class="unknown" onclick="append('x2')">x2</button>
+    <button class="unknown" onclick="append('x3')">x3</button>
+    <button class="unknown" onclick="append('x4')">x4</button>
+    <button class="unknown" onclick="append('x5')">x5</button>
+    <button class="unknown" onclick="append('x6')">x6</button>
+    <button class="unknown" onclick="append('x7')">x7</button>
+    <button class="unknown" onclick="append('x8')">x8</button>
+    <button class="unknown" onclick="append('x9')">x9</button>
+
+    <button onclick="append('(')"> ( </button>
+    <button onclick="append(')')"> )</button>
+    <button onclick="append('.')">.</button>
+
+    <button onclick="append('+')">+</button>
+    <button onclick="append('-')">-</button>
+    <button onclick="append('*')">*</button>
+    <button onclick="append('/')">/</button>
+    <button onclick="append('%')">%</button>
+
+    <button onclick="append('Math.pow(')">pow(</button>
+    <button onclick="append('Math.sqrt(')">sqrt(</button>
+    <button onclick="append('Math.log(')">log(</button>
+    <button onclick="append('Math.sin(')">sin(</button>
+    <button onclick="append('Math.cos(')">cos(</button>
+    <button onclick="append('Math.tan(')">tan(</button>
+    <button onclick="append('Math.ceil(')">ceil(</button>
+    <button onclick="append('Math.floor(')">floor(</button>
+    <button onclick="append('Math.round(')">round(</button>
+    <button onclick="append('Math.isEqual(')">isEqual(</button>
+
+    <button class="backspace" onclick="backspace()">← 退格</button>
+    <button onclick="clearInput()">清空</button>
+</div>
+
+<div class="action">
+    <button class="save" onclick="saveFormula()">保存公式</button>
+    <button class="back" onclick="location.href='index.html'">返回计算器</button>
+</div>
+
+<script>
+    let input = document.getElementById("formulaInput");
+
+    function append(str) {
+        input.value += str;
+    }
+
+    // 退格：删除最后一个字符
+    function backspace() {
+        input.value = input.value.substring(0, input.value.length - 1);
+    }
+
+    function clearInput() {
+        input.value = "";
+    }
+
+    async function saveFormula() {
+        let name = document.getElementById("formulaName").value.trim();
+        let content = input.value.trim();
+        if (!name || !content) {
+            alert("请填写完整公式名称和公式内容");
+            return;
+        }
+        let res = await fetch("/saveFormula?name=" + encodeURIComponent(name) + "&content=" + encodeURIComponent(content));
+        let text = await res.text();
+        alert(text);
+        clearInput();
+    }
+</script>
+</body>
+</html>
