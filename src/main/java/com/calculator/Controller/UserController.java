@@ -25,14 +25,14 @@ public class UserController {
             }
 
             // 检查用户名是否存在
-            String checkUsernameSql = "SELECT COUNT(*) FROM user WHERE username = ?";
+            String checkUsernameSql = "SELECT COUNT(*) FROM user_info WHERE username = ?";
             int count = jdbcTemplate.queryForObject(checkUsernameSql, Integer.class, username.trim());
             if(count > 0) {
                 return "注册失败：用户名已存在";
             }
             //存储用户信息到数据库
             String encryptedPassword = PasswordUtil.encrypt(password.trim());
-            String insertSql = "INSERT INTO user (username, password) VALUES (?, ?)";
+            String insertSql = "INSERT INTO user_info (username, password) VALUES (?, ?)";
             jdbcTemplate.update(insertSql, username.trim(), encryptedPassword);
             return "注册成功";
         } catch (DataAccessException e) {
