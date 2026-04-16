@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>科学计算器</title>
+    <script>
+        // 先检查是否登录，未登录则跳转
+        window.onload = function() {
+            const userId = localStorage.getItem("loginUserId");
+            if (!userId) { // 未登录→跳登录页
+                window.location.href = "login.html";
+            }
+            // 已登录→正常显示计算器（不跳转）
+        };
+    </script>
     <style>
         .container {
             max-width: 600px;
