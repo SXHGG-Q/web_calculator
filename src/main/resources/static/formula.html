@@ -127,17 +127,40 @@
         input.value = "";
     }
 
+    // 保存公式函数（修复400错误：参数名必须为name和content）
     async function saveFormula() {
-        let name = document.getElementById("formulaName").value.trim();
-        let content = input.value.trim();
-        if (!name || !content) {
-            alert("请填写完整公式名称和公式内容");
+        // 1. 获取输入值（这里的变量名可以随便取，但传参时必须叫name和content）
+        const formulaName = document.getElementById("formulaNameInput").value.trim();
+        const formulaContent = document.getElementById("formulaContentInput").value.trim();
+
+        // 2. 基础校验（防止传空值）
+        if (!formulaName) {
+            alert("公式名称不能为空！");
             return;
         }
-        let res = await fetch("/saveFormula?name=" + encodeURIComponent(name) + "&content=" + encodeURIComponent(content));
-        let text = await res.text();
-        alert(text);
-        clearInput();
+        if (!formulaContent) {
+            alert("公式内容不能为空！");
+            return;
+        }
+
+        try {
+            // 3. 核心修复：URL中的参数名必须是name和content（与后端完全匹配）
+            // 格式：/saveFormula?name=xxx&content=xxx
+            const url = `/saveFormula?name=${encodeURIComponent(formulaName)}&content=${encodeURIComponent(formulaContent)}`;
+
+            const res = await fetch(url);
+            const data = await res.text(); // 后端返回的是字符串
+
+            if (data.includes("成功")) {
+                alert("保存公式成功！");
+                window.location.href = "index.html"; // 跳转回计算器
+            } else {
+                alert("保存失败：" + data);
+            }
+        } catch (e) {
+            console.error("保存公式报错：", e);
+            alert("保存公式网络错误，请稍后重试！");
+        }
     }
 </script>
 </body>
