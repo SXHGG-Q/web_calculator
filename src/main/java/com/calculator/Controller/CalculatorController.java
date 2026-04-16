@@ -261,10 +261,11 @@ public class CalculatorController {
     /**
      * 保存计算记录（核心修复：异常处理、参数校验、补充创建时间）
      */
+    // 保存计算记录（核心修复：异常处理、参数校验、补充创建时间）
     @GetMapping("/save")
     public String save(
             @RequestParam String expression,
-            @RequestParam double result,
+            @RequestParam String result, // 修改为String类型
             @RequestParam Integer user_id
     ){
         try {
@@ -274,7 +275,7 @@ public class CalculatorController {
             }
             // 补充创建时间（如果表中create_time字段未设置自动生成，手动插入）
             String sql = "insert into calc_record(expression,result,create_time,user_id) values(?,?,?,?)";
-            jdbcTemplate.update(sql, expression.trim(), result, LocalDateTime.now(),user_id);
+            jdbcTemplate.update(sql, expression.trim(), result, LocalDateTime.now(), user_id);
             return "保存成功";
         } catch (Exception e) {
             // 捕获数据库异常，返回友好提示

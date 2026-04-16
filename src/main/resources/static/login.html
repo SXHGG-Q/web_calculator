@@ -64,6 +64,7 @@
     }
 
     // 登录功能
+    // 登录功能
     function login() {
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value.trim();
@@ -76,7 +77,7 @@
             .then(data => {
                 if (data.startsWith("登录成功")) {
                     // 提取用户ID，存储到本地（LocalStorage）
-                    const userId = data.split("|")[1];
+                    const userId = data.substring(4); // 从"登录成功"后面提取ID
                     localStorage.setItem("loginUserId", userId);
                     localStorage.setItem("loginUsername", username);
                     // 跳转到计算器主页面

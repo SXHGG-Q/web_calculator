@@ -13,6 +13,7 @@ public class CalcRecord {
 
     private String expression;
     private String result;
+    private Long user_id;
 
     @Column(updatable = false)
     private LocalDateTime createTime;
@@ -25,9 +26,10 @@ public class CalcRecord {
     // 无参构造（JPA必须）
     public CalcRecord() {}
 
-    public CalcRecord(String expression, String result) {
+    public CalcRecord(String expression, String result, Long user_id) {
         this.expression = expression;
         this.result = result;
+        this.user_id = user_id;
     }
 
     // Getter & Setter
@@ -37,6 +39,8 @@ public class CalcRecord {
     public void setExpression(String expression) { this.expression = expression; }
     public String getResult() { return result; }
     public void setResult(String result) { this.result = result; }
+    public Long getUser_id() { return user_id; }
+    public void setUser_id(Long user_id) { this.user_id = user_id; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
 }

@@ -257,7 +257,13 @@
     // 查看公式列表
     async function listFormulas() {
         try {
-            const res = await fetch("/listFormulas");
+            const userId = localStorage.getItem("loginUserId");
+            if (!userId) {
+                alert("请先登录！");
+                window.location.href = "login.html";
+                return;
+            }
+            const res = await fetch(`/listFormulas?user_id=${userId}`);
             if (!res.ok) throw new Error('获取公式列表失败');
 
             const text = await res.text();
@@ -281,13 +287,9 @@
             return;
         }
         const result = resultText.replace('结果：', '').trim();
-        if (isNaN(Number(result)) && !/^公式/.test(currentExpression)) {
-            alert('结果不是有效数值，无法保存！');
-            return;
-        }
         try {
             // URL中添加user_id参数
-            const url = `/save?expression=${encodeURIComponent(currentExpression)}&result=${result}&user_id=${userId}`;
+            const url = `/save?expression=${encodeURIComponent(currentExpression)}&result=${encodeURIComponent(result)}&user_id=${userId}`;
             const res = await fetch(url);
             if (!res.ok) throw new Error('保存失败');
             alert("保存成功！");
@@ -297,9 +299,16 @@
         }
     }
 
+
     async function queryRecords() {
         try {
-            const res = await fetch("/query");
+            const userId = localStorage.getItem("loginUserId");
+            if (!userId) {
+                alert("请先登录！");
+                window.location.href = "login.html";
+                return;
+            }
+            const res = await fetch(`/query?user_id=${userId}`);
             if (!res.ok) throw new Error('获取历史记录失败');
 
             const text = await res.text();
@@ -308,6 +317,7 @@
             document.getElementById("history").innerText = `获取历史记录失败：${e.message}`;
         }
     }
+
 
     function logout() {
         localStorage.removeItem("loginUserId");
