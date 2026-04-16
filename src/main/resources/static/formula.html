@@ -67,6 +67,8 @@
 </head>
 <body>
 <h2>科学公式编辑器</h2>
+<div id="userInfo" style="margin-bottom: 20px;"></div>
+<button onclick="logout()" style="position: absolute; top: 20px; right: 20px;">登出</button>
 <input id="formulaName" placeholder="输入公式名称（如：勾股定理、梯形面积）">
 <input id="formulaInput" readonly placeholder="点击按钮拼接公式（x1-x9为未知数）">
 
@@ -114,6 +116,24 @@
 <script>
     let input = document.getElementById("formulaInput");
 
+    //页面加载时检验用户是否登录
+    window.onload = function() {
+        const userId = localStorage.getItem('loginUserId');
+        const username = localStorage.getItem('loginUsername');
+        if (!userId || !username) {
+            alert("请先登录后再访问公式编辑器！");
+            window.location.href = "login.html";
+        }else{
+            // 登录成功，设置用户ID
+            document.getElementById("userInfo").innerText = `当前用户：${username}`;
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("loginUserId");
+        localStorage.removeItem("loginUsername");
+        window.location.href = "login.html";
+    }
     function append(str) {
         input.value += str;
     }

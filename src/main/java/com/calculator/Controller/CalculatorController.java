@@ -269,6 +269,12 @@ public class CalculatorController {
             @RequestParam Integer user_id
     ){
         try {
+            // 验证用户是否存在
+            String checkUserSql = "SELECT COUNT(*) FROM user_info WHERE id = ?";
+            int userCount = jdbcTemplate.queryForObject(checkUserSql, Integer.class, user_id);
+            if (userCount == 0) {
+                return "保存失败：用户不存在";
+            }
             // 参数校验
             if (expression == null || expression.trim().isEmpty()) {
                 return "保存失败：计算式不能为空";
@@ -289,6 +295,11 @@ public class CalculatorController {
     @GetMapping("/query")
     public String query(@RequestParam Integer user_id){
         try {
+            String checkUserSql = "SELECT COUNT(*) FROM user_info WHERE id = ?";
+            int userCount = jdbcTemplate.queryForObject(checkUserSql, Integer.class, user_id);
+            if (userCount == 0) {
+                return "查询失败：用户不存在";
+            }
             String sql ="select * from calc_record where user_id=? order by id desc";
             List<Map<String, Object>> list = jdbcTemplate.queryForList(sql,user_id);
 
@@ -331,8 +342,16 @@ public class CalculatorController {
             if (content == null || content.trim().isEmpty()) {
                 return "保存失败：公式内容不能为空";
             }
-            String sql = "insert into formula(formula_name,formula_content,user_id) values(?,?,?)";
-            jdbcTemplate.update(sql, name.trim(), content.trim(),user_id);
+
+            // 验证用户是否存在
+            String checkUserSql = "SELECT COUNT(*) FROM user_info WHERE id = ?";
+            int userCount = jdbcTemplate.queryForObject(checkUserSql, Integer.class, user_id);
+            if (userCount == 0) {
+                return "保存失败：用户不存在";
+            }
+
+            String sql = "insert into formula(name,content,user_id) values(?,?,?)";
+            jdbcTemplate.update(sql, name.trim(), content.trim(), user_id);
             return "保存成功";
         } catch (Exception e) {
             return "保存公式失败：" + e.getMessage();
@@ -345,6 +364,12 @@ public class CalculatorController {
     @GetMapping("/listFormulas")
     public String listFormulas(@RequestParam Integer user_id){
         try {
+            // 验证用户是否存在
+            String checkUserSql = "SELECT COUNT(*) FROM user_info WHERE id = ?";
+            int userCount = jdbcTemplate.queryForObject(checkUserSql, Integer.class, user_id);
+            if (userCount == 0) {
+                return "查询失败：用户不存在";
+            }
             String sql = "select * from formula where user_id=? order by id desc";
             List<Map<String, Object>> list = jdbcTemplate.queryForList(sql,user_id);
 

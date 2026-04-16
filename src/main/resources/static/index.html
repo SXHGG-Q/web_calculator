@@ -54,6 +54,8 @@
 <body>
 <div class="container">
     <h1>科学计算器</h1>
+    <div id="userInfo" style="margin-bottom: 20px;"></div>
+    <button onclick="logout()" style="position: absolute; top: 20px; right: 20px;">登出</button>
 
     <!-- 动态未知数输入框区域 -->
     <div id="inputContainer">
@@ -109,6 +111,9 @@
         const userId = localStorage.getItem('loginUserId');
         const username = localStorage.getItem('loginUsername');
         if (!userId || !username) {
+            // 清除可能存在的旧登录信息
+            localStorage.removeItem('loginUserId');
+            localStorage.removeItem('loginUsername');
             alert("未登录，进入游客模式（无法保存记录/公式）");
         }else{
             // 登录成功，设置用户ID
