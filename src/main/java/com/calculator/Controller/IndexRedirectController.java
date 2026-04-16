@@ -12,11 +12,4 @@ public class IndexRedirectController {
     public String redirectToLogin() {
         return "redirect:/login.html";
     }
-
-    //如果有人直接访问index.html，也跳登录页
-    @GetMapping("/index.html")
-    public String redirectIndexToLogin() {
-        // 未登录则跳转，已登录则放行（可选优化）
-        return "redirect:/login.html";
-    }
 }
