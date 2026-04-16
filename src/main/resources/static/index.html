@@ -104,6 +104,18 @@
     // 存储当前计算的原始表达式（用于历史记录）
     let currentExpression = '';
 
+    //页面加载时检验用户是否登录
+    window.onload = function() {
+        const userId = localStorage.getItem('loginUserId');
+        const username = localStorage.getItem('loginUsername');
+        if (!userId || !username) {
+            alert("未登录，进入游客模式（无法保存记录/公式）");
+        }else{
+            // 登录成功，设置用户ID
+            document.getElementById("userInfo").innerText = `当前用户：${username}`;
+        }
+    }
+
     // ===================== 1. 动态输入框控制 =====================
     // 添加未知数（最多9个）
     function addInput() {
@@ -257,27 +269,27 @@
 
     // ===================== 4. 历史记录 =====================
     async function saveRecord() {
-        // 校验是否有可保存的结果
+        const userId = localStorage.getItem("loginUserId");
+        if (!userId) {
+            alert("请先登录！");
+            window.location.href = "login.html";
+            return;
+        }
         const resultText = document.getElementById("result").innerText;
         if (!resultText || resultText === '结果：' || resultText.includes('计算失败')) {
             alert('暂无有效结果可保存！');
             return;
         }
-
-        // 提取结果数值（去掉"结果："前缀）
         const result = resultText.replace('结果：', '').trim();
-        // 校验结果是否为有效数值（公式计算可能返回非数值）
         if (isNaN(Number(result)) && !/^公式/.test(currentExpression)) {
             alert('结果不是有效数值，无法保存！');
             return;
         }
-
         try {
-            // 适配后端save接口参数名：expression / result
-            const url = `/save?expression=${encodeURIComponent(currentExpression)}&result=${result}`;
+            // URL中添加user_id参数
+            const url = `/save?expression=${encodeURIComponent(currentExpression)}&result=${result}&user_id=${userId}`;
             const res = await fetch(url);
             if (!res.ok) throw new Error('保存失败');
-
             alert("保存成功！");
         } catch (e) {
             console.error('保存记录失败：', e);
@@ -295,6 +307,12 @@
         } catch (e) {
             document.getElementById("history").innerText = `获取历史记录失败：${e.message}`;
         }
+    }
+
+    function logout() {
+        localStorage.removeItem("loginUserId");
+        localStorage.removeItem("loginUsername");
+        window.location.href = "login.html";
     }
 </script>
 </body>

@@ -264,7 +264,8 @@ public class CalculatorController {
     @GetMapping("/save")
     public String save(
             @RequestParam String expression,
-            @RequestParam double result
+            @RequestParam double result,
+            @RequestParam Integer user_id
     ){
         try {
             // 参数校验
@@ -272,8 +273,8 @@ public class CalculatorController {
                 return "保存失败：计算式不能为空";
             }
             // 补充创建时间（如果表中create_time字段未设置自动生成，手动插入）
-            String sql = "insert into calc_record(expression,result,create_time) values(?,?,?)";
-            jdbcTemplate.update(sql, expression.trim(), result, LocalDateTime.now());
+            String sql = "insert into calc_record(expression,result,create_time,user_id) values(?,?,?,?)";
+            jdbcTemplate.update(sql, expression.trim(), result, LocalDateTime.now(),user_id);
             return "保存成功";
         } catch (Exception e) {
             // 捕获数据库异常，返回友好提示
@@ -285,10 +286,10 @@ public class CalculatorController {
      * 查询历史记录（修复空记录展示、异常处理）
      */
     @GetMapping("/query")
-    public String query(){
+    public String query(@RequestParam Integer user_id){
         try {
-            String sql ="select * from calc_record order by id desc";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            String sql ="select * from calc_record where user_id=? order by id desc";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql,user_id);
 
             StringBuilder sb = new StringBuilder();
             sb.append("==================== 计算历史记录 ====================\n");
@@ -318,7 +319,8 @@ public class CalculatorController {
     @GetMapping("/saveFormula")
     public String saveFormula(
             @RequestParam String name,
-            @RequestParam String content
+            @RequestParam String content,
+            @RequestParam Integer user_id
     ){
         try {
             // 参数校验
@@ -328,8 +330,8 @@ public class CalculatorController {
             if (content == null || content.trim().isEmpty()) {
                 return "保存失败：公式内容不能为空";
             }
-            String sql = "insert into formula(formula_name,formula_content) values(?,?)";
-            jdbcTemplate.update(sql, name.trim(), content.trim());
+            String sql = "insert into formula(formula_name,formula_content,user_id) values(?,?,?)";
+            jdbcTemplate.update(sql, name.trim(), content.trim(),user_id);
             return "保存成功";
         } catch (Exception e) {
             return "保存公式失败：" + e.getMessage();
@@ -340,10 +342,10 @@ public class CalculatorController {
      * 查询公式列表（修复空列表展示）
      */
     @GetMapping("/listFormulas")
-    public String listFormulas(){
+    public String listFormulas(@RequestParam Integer user_id){
         try {
-            String sql = "select * from formula order by id desc";
-            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+            String sql = "select * from formula where user_id=? order by id desc";
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(sql,user_id);
 
             StringBuilder sb = new StringBuilder();
             sb.append("==================== 公式列表 ====================\n");
