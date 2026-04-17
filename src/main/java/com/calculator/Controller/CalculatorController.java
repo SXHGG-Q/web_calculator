@@ -383,8 +383,8 @@ public class CalculatorController {
 
             for (Map<String, Object> map : list) {
                 sb.append("序号：").append(map.get("id")).append("\n");
-                sb.append("公式名称：").append(map.get("formula_name")).append("\n");
-                sb.append("公式内容：").append(map.get("formula_content")).append("\n");
+                sb.append("公式名称：").append(map.get("name")).append("\n");
+                sb.append("公式内容：").append(map.get("content")).append("\n");
                 sb.append("----------------------------------------------------\n");
             }
             return sb.toString();
