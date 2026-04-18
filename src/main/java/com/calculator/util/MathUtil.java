@@ -117,7 +117,7 @@ public class MathUtil {
     //自定义公式
     public String calcFormula(String name, double x1, double x2, double x3, double x4, double x5, double x6, double x7, double x8, double x9) {
         try {
-            String formula = jdbcTemplate.queryForObject("select formula_content from formula where formula_name = ?", String.class, name);
+            String formula = jdbcTemplate.queryForObject("select content from formula where name = ?", String.class, name);
             ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
             engine.put("x1", x1);
             engine.put("x2", x2);
